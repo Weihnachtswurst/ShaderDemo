@@ -38,17 +38,24 @@
                 GL.BindBuffer(BufferTarget.ArrayBuffer, o.ColorBufferID);
                 GL.BufferData(BufferTarget.ArrayBuffer, (IntPtr)(o.ColorData.Count * sizeof(float)), o.ColorData.ToArray(), BufferUsageHint.StaticDraw);
 
+                o.PickColorBufferID = GL.GenBuffer();
+                GL.BindBuffer(BufferTarget.ArrayBuffer, o.PickColorBufferID);
+                GL.BufferData(BufferTarget.ArrayBuffer, (IntPtr)(o.PickColorData.Count * sizeof(float)), o.PickColorData.ToArray(), BufferUsageHint.StaticDraw);
+
                 GL.BindBuffer(BufferTarget.ArrayBuffer, 0);
             }
         }
 
-        public void draw(int positionLocation, int colorLocation)
+        public void draw(int positionLocation, int colorLocation, int pickColorLocation)
         {
             if (positionLocation == -1)
                 Console.Out.WriteLine("Invalid Position Location");
 
             if (colorLocation == -1)
                 Console.Out.WriteLine("Invalid Color Location");
+
+            if (pickColorLocation == -1)
+                Console.Out.WriteLine("Invalid Pick Color Location");
 
             foreach (var o in objects)
             {
@@ -60,7 +67,13 @@
                 GL.BindBuffer(BufferTarget.ArrayBuffer, o.ColorBufferID);
                 GL.VertexAttribPointer(colorLocation, 4, VertexAttribPointerType.Float, false, 0, 0);
 
+                GL.EnableVertexAttribArray(pickColorLocation);
+                GL.BindBuffer(BufferTarget.ArrayBuffer, o.PickColorBufferID);
+                GL.VertexAttribPointer(pickColorLocation, 4, VertexAttribPointerType.Float, false, 0, 0);
+
                 GL.DrawArrays(PrimitiveType.Triangles, 0, o.VertexCount);
+                GL.DisableVertexAttribArray(colorLocation);
+                GL.DisableVertexAttribArray(pickColorLocation);
                 GL.DisableVertexAttribArray(positionLocation);
             }
         }
@@ -101,6 +114,10 @@
                     objects.Last().ColorData.AddRange(curMaterial.DiffuseColor);
                     objects.Last().ColorData.AddRange(curMaterial.DiffuseColor);
                     objects.Last().ColorData.AddRange(curMaterial.DiffuseColor);
+
+                    objects.Last().PickColorData.AddRange(new float[] { 1.0f, 0.0f, 0.0f, 1.0f});
+                    objects.Last().PickColorData.AddRange(new float[] { 1.0f, 0.0f, 0.0f, 1.0f });
+                    objects.Last().PickColorData.AddRange(new float[] { 1.0f, 0.0f, 0.0f, 1.0f });
                 }
                 else if (line.StartsWith("o "))
                 {
@@ -200,14 +217,17 @@ namespace ModelData
     {
         public List<float> VertexData { get; set; }
         public List<float> ColorData { get; set; }
+        public List<float> PickColorData { get; set; }
         public int ColorBufferID { get; set; }
         public int VertexBufferID { get; set; }
+        public int PickColorBufferID { get; set; }
         public int VertexCount { get; set; }
 
         public OBJObject()
         {
             VertexData = new List<float>();
             ColorData = new List<float>();
+            PickColorData = new List<float>();
             ColorBufferID = -1;
             VertexBufferID = -1;
             VertexCount = 0;

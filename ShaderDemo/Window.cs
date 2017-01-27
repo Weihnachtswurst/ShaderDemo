@@ -44,7 +44,7 @@ namespace ShaderDemo
 
             Console.Out.WriteLine(GL.GetString(StringName.Version));
                         
-            m.loadFromOBJ("E:/test.obj");
+            m.loadFromOBJ("C:/Users/Anwender/Downloads/lpm_yard.obj");
             m.init();
 
             // Setup openGL
@@ -59,8 +59,11 @@ namespace ShaderDemo
             CameraPosition = new Vector3(0.5f, 0.5f, 0);
 
             // Read shaders from file
-            string VertexSource = File.ReadAllText("Shader/vs.glsl");
-            string FragmentSource = File.ReadAllText("Shader/fr.glsl");
+            // string VertexSource = File.ReadAllText("Shader/vs.glsl");
+            // string FragmentSource = File.ReadAllText("Shader/fr.glsl");
+
+            string VertexSource = File.ReadAllText("C:/Users/Anwender/Source/Repos/ShaderDemo/ShaderDemo/Shader/vs.glsl");
+            string FragmentSource = File.ReadAllText("C:/Users/Anwender/Source/Repos/ShaderDemo/ShaderDemo/Shader/fr.glsl");
 
             // Create Shaders
             int VertexID = GL.CreateShader(ShaderType.VertexShader);
@@ -89,7 +92,7 @@ namespace ShaderDemo
             GL.AttachShader(Program, FragmentID);
             GL.AttachShader(Program, VertexID);
 
-            GL.BindFragDataLocation(Program, 0, "frag_color");
+            GL.BindFragDataLocation(Program, 0, "color");
 
             GL.LinkProgram(Program);
 
@@ -102,9 +105,7 @@ namespace ShaderDemo
             UniformMVPMatrixLocation = GL.GetUniformLocation(Program, "mvp_matrix");
             UniformMouseXLocation = GL.GetUniformLocation(Program, "mouse_x");
             UniformMouseYLocation = GL.GetUniformLocation(Program, "mouse_y");
-
-            Console.Out.WriteLine(UniformMouseXLocation + "," + UniformMouseYLocation);
-
+            
             GL.GenBuffers(1, out SSB);
             GL.BindBuffer(BufferTarget.ShaderStorageBuffer, SSB);
             GL.BufferData(BufferTarget.ShaderStorageBuffer, (IntPtr)(4 * sizeof(float)), SSBDefaultData, BufferUsageHint.DynamicCopy);
@@ -154,7 +155,6 @@ namespace ShaderDemo
             Matrix4 MVPMatrix = ModelviewMatrix * WorldMatrix * ProjectionMatrix;
 
             GL.UseProgram(Program);
-
  
             GL.UniformMatrix4(UniformMVPMatrixLocation, false, ref MVPMatrix);
             GL.Uniform1(UniformMouseXLocation, Mouse.X);
@@ -165,7 +165,10 @@ namespace ShaderDemo
             GL.BindBufferBase(BufferRangeTarget.ShaderStorageBuffer, 0, SSB);
             GL.GetBufferSubData(BufferTarget.ShaderStorageBuffer, (IntPtr)0, (IntPtr)(4 * sizeof(float)), output);
 
-            Console.Out.WriteLine(output[0] + "/" + output[1] + "/" + output[2] + "/" + output[3]);
+            if (output[3] != float.MaxValue)
+            {
+                Console.Out.WriteLine(output[0] + "/" + output[1] + "/" + output[2] + "/" + output[3]);
+            }
 
             GL.BufferData(BufferTarget.ShaderStorageBuffer, (IntPtr)(4 * sizeof(float)), SSBDefaultData, BufferUsageHint.DynamicCopy);
 
@@ -182,7 +185,7 @@ namespace ShaderDemo
 
             GL.UseProgram(Program);
 
-            m.draw(PositionLocation, ColorLocation);
+            m.draw(PositionLocation, ColorLocation, PickColorLocation);
 
             GL.UseProgram(0);
 

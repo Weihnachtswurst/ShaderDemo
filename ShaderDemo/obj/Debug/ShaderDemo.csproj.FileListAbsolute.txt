@@ -10,8 +10,7 @@ C:\Users\Anwender\documents\visual studio 2015\Projects\ShaderDemo\ShaderDemo\bi
 C:\Users\Anwender\Source\Repos\ShaderDemo\ShaderDemo\bin\Debug\ShaderDemo.exe.config
 C:\Users\Anwender\Source\Repos\ShaderDemo\ShaderDemo\bin\Debug\ShaderDemo.exe
 C:\Users\Anwender\Source\Repos\ShaderDemo\ShaderDemo\bin\Debug\ShaderDemo.pdb
-C:\Users\Anwender\Source\Repos\ShaderDemo\ShaderDemo\bin\Debug\OpenTK.pdb
-C:\Users\Anwender\Source\Repos\ShaderDemo\ShaderDemo\bin\Debug\OpenTK.xml
 C:\Users\Anwender\Source\Repos\ShaderDemo\ShaderDemo\obj\Debug\ShaderDemo.csprojResolveAssemblyReference.cache
 C:\Users\Anwender\Source\Repos\ShaderDemo\ShaderDemo\obj\Debug\ShaderDemo.exe
 C:\Users\Anwender\Source\Repos\ShaderDemo\ShaderDemo\obj\Debug\ShaderDemo.pdb
+C:\Users\Anwender\Source\Repos\ShaderDemo\ShaderDemo\bin\Debug\OpenTK.dll
