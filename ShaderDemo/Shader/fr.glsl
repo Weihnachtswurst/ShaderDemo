@@ -1,7 +1,7 @@
 ﻿#version 430
 in vec4 frag_color;
-in vec4 frag_pick_color;
 in vec4 gl_FragCoord;
+flat in int frag_pick_index;
 
 out vec4 color;
 
@@ -15,7 +15,7 @@ void main(void)
 	if (int(gl_FragCoord.x) == mouse_x && int(gl_FragCoord.y) == mouse_y) {
 		if (gl_FragCoord.z < depth_value) 
 		{
-			pick_index = 42;
+			pick_index = frag_pick_index;
 			depth_value = gl_FragCoord.z;
 		}
 	}

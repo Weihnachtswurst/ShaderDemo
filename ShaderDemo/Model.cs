@@ -44,7 +44,7 @@
 
                 o.PickColorBufferID = GL.GenBuffer();
                 GL.BindBuffer(BufferTarget.ArrayBuffer, o.PickColorBufferID);
-                GL.BufferData(BufferTarget.ArrayBuffer, (IntPtr)(o.PickColorData.Count * sizeof(float)), o.PickColorData.ToArray(), BufferUsageHint.StaticDraw);
+                GL.BufferData(BufferTarget.ArrayBuffer, (IntPtr)(o.PickColorData.Count * sizeof(int)), o.PickColorData.ToArray(), BufferUsageHint.StaticDraw);
 
                 GL.BindBuffer(BufferTarget.ArrayBuffer, 0);
             }
@@ -80,12 +80,13 @@
 
                 GL.EnableVertexAttribArray(pickColorLocation);
                 GL.BindBuffer(BufferTarget.ArrayBuffer, o.PickColorBufferID);
-                GL.VertexAttribPointer(pickColorLocation, 4, VertexAttribPointerType.Float, false, 0, 0);
+                GL.VertexAttribPointer(pickColorLocation, 1, VertexAttribPointerType.Float, false, 0, 0);
 
                 GL.DrawArrays(PrimitiveType.Triangles, 0, o.VertexCount);
                 GL.DisableVertexAttribArray(colorLocation);
                 GL.DisableVertexAttribArray(pickColorLocation);
                 GL.DisableVertexAttribArray(positionLocation);
+                GL.DisableVertexAttribArray(pickColorLocation);
             }
         }
 
@@ -134,9 +135,9 @@
                     objects.Last().ColorData.AddRange(curMaterial.DiffuseColor);
                     objects.Last().ColorData.AddRange(curMaterial.DiffuseColor);
 
-                    objects.Last().PickColorData.AddRange(new float[] { 1.0f, 0.0f, 0.0f, 1.0f});
-                    objects.Last().PickColorData.AddRange(new float[] { 1.0f, 0.0f, 0.0f, 1.0f });
-                    objects.Last().PickColorData.AddRange(new float[] { 1.0f, 0.0f, 0.0f, 1.0f });
+                    objects.Last().PickColorData.Add(curMaterial.PickIndex);
+                    objects.Last().PickColorData.Add(curMaterial.PickIndex);
+                    objects.Last().PickColorData.Add(curMaterial.PickIndex);
                 }
                 else if (line.StartsWith("o "))
                 {
@@ -237,7 +238,7 @@ namespace ModelData
         public List<float> VertexData { get; set; }
         public List<float> NormalData { get; set; }
         public List<float> ColorData { get; set; }
-        public List<float> PickColorData { get; set; }
+        public List<int> PickColorData { get; set; }
         public int ColorBufferID { get; set; }
         public int VertexBufferID { get; set; }
         public int NormalBufferID { get; set; }
@@ -249,7 +250,7 @@ namespace ModelData
             VertexData = new List<float>();
             NormalData = new List<float>();
             ColorData = new List<float>();
-            PickColorData = new List<float>();
+            PickColorData = new List<int>();
             ColorBufferID = -1;
             VertexBufferID = -1;
             VertexCount = 0;
@@ -266,8 +267,13 @@ namespace ModelData
         public float[] SpecularColor { get; set; }
         public float[] EmissiveColor { get; set; }
 
+        public static int StaticPickIndex = 0;
+        public int PickIndex;
+
         public Material(string name)
         {
+            PickIndex = StaticPickIndex++;
+
             this.name = name;
             Alpha = 1;
             SpecularExponent = 1;
