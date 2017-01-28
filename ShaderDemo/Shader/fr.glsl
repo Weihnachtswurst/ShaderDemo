@@ -5,18 +5,18 @@ in vec4 gl_FragCoord;
 
 out vec4 color;
 
-layout (std430, binding = 0) buffer mouse_color { vec4 mouse_color_value; };
+layout (std430, binding = 0) buffer mouse_color { int pick_index; float depth_value; };
 
-uniform int pick_index;
 uniform int mouse_x;
 uniform int mouse_y;
 
 void main(void)
 {		
 	if (int(gl_FragCoord.x) == mouse_x && int(gl_FragCoord.y) == mouse_y) {
-		if (gl_FragCoord.z < mouse_color_value.w) 
+		if (gl_FragCoord.z < depth_value) 
 		{
-			mouse_color_value = vec4(frag_pick_color.xyz, gl_FragCoord.z);
+			pick_index = 42;
+			depth_value = gl_FragCoord.z;
 		}
 	}
 

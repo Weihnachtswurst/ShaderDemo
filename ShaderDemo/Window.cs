@@ -7,6 +7,7 @@ using System.IO;
 using OpenTK.Graphics.OpenGL4;
 using OpenTK;
 using OpenTK.Input;
+using System.Runtime.InteropServices;
 
 namespace ShaderDemo
 {
@@ -18,9 +19,12 @@ namespace ShaderDemo
         Matrix4 ModelviewMatrix;
         Vector3 CameraPosition;
         float[] SSBDefaultData = { 0.0f, 0.0f, 0.0f, float.MaxValue };
+        PickSSB defaultPickSSB;
         int PickColorLocation;
         int PositionLocation;
+        int NormalLocation;
         int ColorLocation;
+        int UniformLookAtLocation;
         int UniformMouseXLocation;
         int UniformMouseYLocation;
         int UniformMVPMatrixLocation;
@@ -57,6 +61,10 @@ namespace ShaderDemo
             WorldMatrix = new Matrix4();
             ModelviewMatrix = new Matrix4();
             CameraPosition = new Vector3(0.5f, 0.5f, 0);
+
+            defaultPickSSB = new PickSSB();
+            defaultPickSSB.DepthValue = float.MaxValue;
+            defaultPickSSB.PickIndex = 7;
 
             // Read shaders from file
             // string VertexSource = File.ReadAllText("Shader/vs.glsl");
@@ -101,14 +109,19 @@ namespace ShaderDemo
             // Get Buffer Locations
             PickColorLocation = GL.GetAttribLocation(Program, "vertex_pick_color");
             PositionLocation = GL.GetAttribLocation(Program, "vertex_position");
+            NormalLocation = GL.GetAttribLocation(Program, "vertex_normal");
             ColorLocation = GL.GetAttribLocation(Program, "vertex_color");
             UniformMVPMatrixLocation = GL.GetUniformLocation(Program, "mvp_matrix");
+            UniformLookAtLocation = GL.GetUniformLocation(Program, "look_at");
             UniformMouseXLocation = GL.GetUniformLocation(Program, "mouse_x");
             UniformMouseYLocation = GL.GetUniformLocation(Program, "mouse_y");
+
+            IntPtr testPtr = Marshal.AllocHGlobal(Marshal.SizeOf(defaultPickSSB));
+            Marshal.StructureToPtr(defaultPickSSB, testPtr, false);
             
             GL.GenBuffers(1, out SSB);
             GL.BindBuffer(BufferTarget.ShaderStorageBuffer, SSB);
-            GL.BufferData(BufferTarget.ShaderStorageBuffer, (IntPtr)(4 * sizeof(float)), SSBDefaultData, BufferUsageHint.DynamicCopy);
+            GL.BufferData(BufferTarget.ShaderStorageBuffer, (IntPtr)(4 * sizeof(float)), ref defaultPickSSB, BufferUsageHint.DynamicCopy);
             GL.BindBufferBase(BufferRangeTarget.ShaderStorageBuffer, 0, SSB);
 
             GL.UseProgram(0);
@@ -153,24 +166,26 @@ namespace ShaderDemo
             WorldMatrix = Matrix4.CreateTranslation(-CameraPosition);
             ModelviewMatrix = Matrix4.CreateTranslation(0.0f, 0.0f, -2.0f);
             Matrix4 MVPMatrix = ModelviewMatrix * WorldMatrix * ProjectionMatrix;
-
+            Vector3 lookAtVector = new Vector3(0, 1, 0);
+            
             GL.UseProgram(Program);
  
             GL.UniformMatrix4(UniformMVPMatrixLocation, false, ref MVPMatrix);
+            GL.Uniform3(UniformLookAtLocation, ref lookAtVector);
             GL.Uniform1(UniformMouseXLocation, Mouse.X);
             GL.Uniform1(UniformMouseYLocation, Height - Mouse.Y);
+            
 
-            float[] output = new float[4];
+            //float[] output = new float[4];
+            PickSSB output = new PickSSB();
+            // int output = -1;
             GL.BindBuffer(BufferTarget.ShaderStorageBuffer, SSB);
             GL.BindBufferBase(BufferRangeTarget.ShaderStorageBuffer, 0, SSB);
-            GL.GetBufferSubData(BufferTarget.ShaderStorageBuffer, (IntPtr)0, (IntPtr)(4 * sizeof(float)), output);
+            GL.GetBufferSubData(BufferTarget.ShaderStorageBuffer, (IntPtr)0, (IntPtr)(8), ref output);
+            
+            Console.Out.WriteLine(output.PickIndex);
 
-            if (output[3] != float.MaxValue)
-            {
-                Console.Out.WriteLine(output[0] + "/" + output[1] + "/" + output[2] + "/" + output[3]);
-            }
-
-            GL.BufferData(BufferTarget.ShaderStorageBuffer, (IntPtr)(4 * sizeof(float)), SSBDefaultData, BufferUsageHint.DynamicCopy);
+            GL.BufferData(BufferTarget.ShaderStorageBuffer, (IntPtr)(2 * sizeof(float)), ref defaultPickSSB, BufferUsageHint.DynamicCopy);
 
             GL.UseProgram(0);
         }
@@ -185,11 +200,17 @@ namespace ShaderDemo
 
             GL.UseProgram(Program);
 
-            m.draw(PositionLocation, ColorLocation, PickColorLocation);
+            m.draw(PositionLocation, NormalLocation, ColorLocation, PickColorLocation);
 
             GL.UseProgram(0);
 
             SwapBuffers();
         }
     }
+}
+
+public struct PickSSB
+{
+    public int PickIndex;
+    public float DepthValue;
 }

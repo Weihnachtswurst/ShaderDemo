@@ -34,6 +34,10 @@
                 GL.BindBuffer(BufferTarget.ArrayBuffer, o.VertexBufferID);
                 GL.BufferData(BufferTarget.ArrayBuffer, (IntPtr)(o.VertexData.Count * sizeof(float)), o.VertexData.ToArray(), BufferUsageHint.StaticDraw);
 
+                o.NormalBufferID = GL.GenBuffer();
+                GL.BindBuffer(BufferTarget.ArrayBuffer, o.NormalBufferID);
+                GL.BufferData(BufferTarget.ArrayBuffer, (IntPtr)(o.NormalData.Count * sizeof(float)), o.NormalData.ToArray(), BufferUsageHint.StaticDraw);
+
                 o.ColorBufferID = GL.GenBuffer();
                 GL.BindBuffer(BufferTarget.ArrayBuffer, o.ColorBufferID);
                 GL.BufferData(BufferTarget.ArrayBuffer, (IntPtr)(o.ColorData.Count * sizeof(float)), o.ColorData.ToArray(), BufferUsageHint.StaticDraw);
@@ -46,10 +50,13 @@
             }
         }
 
-        public void draw(int positionLocation, int colorLocation, int pickColorLocation)
+        public void draw(int positionLocation, int normalLocation, int colorLocation, int pickColorLocation)
         {
             if (positionLocation == -1)
                 Console.Out.WriteLine("Invalid Position Location");
+
+            if (normalLocation == -1)
+                Console.Out.WriteLine("Invalid Normal Location");
 
             if (colorLocation == -1)
                 Console.Out.WriteLine("Invalid Color Location");
@@ -62,6 +69,10 @@
                 GL.EnableVertexAttribArray(positionLocation);
                 GL.BindBuffer(BufferTarget.ArrayBuffer, o.VertexBufferID);
                 GL.VertexAttribPointer(positionLocation, 3, VertexAttribPointerType.Float, false, 0, 0);
+
+                GL.EnableVertexAttribArray(normalLocation);
+                GL.BindBuffer(BufferTarget.ArrayBuffer, o.NormalBufferID);
+                GL.VertexAttribPointer(normalLocation, 3, VertexAttribPointerType.Float, true, 0, 0);
 
                 GL.EnableVertexAttribArray(colorLocation);
                 GL.BindBuffer(BufferTarget.ArrayBuffer, o.ColorBufferID);
@@ -105,11 +116,19 @@
                     int v2 = int.Parse(s[4]) - 1;
                     int v3 = int.Parse(s[7]) - 1;
 
+                    int n1 = int.Parse(s[3]) - 1;
+                    int n2 = int.Parse(s[6]) - 1;
+                    int n3 = int.Parse(s[9]) - 1;
+
                     objects.Last().VertexCount += 3;
 
                     objects.Last().VertexData.AddRange(vertices[v1]);
                     objects.Last().VertexData.AddRange(vertices[v2]);
                     objects.Last().VertexData.AddRange(vertices[v3]);
+
+                    objects.Last().NormalData.AddRange(normals[n1]);
+                    objects.Last().NormalData.AddRange(normals[n2]);
+                    objects.Last().NormalData.AddRange(normals[n3]);
 
                     objects.Last().ColorData.AddRange(curMaterial.DiffuseColor);
                     objects.Last().ColorData.AddRange(curMaterial.DiffuseColor);
@@ -216,16 +235,19 @@ namespace ModelData
     public class OBJObject
     {
         public List<float> VertexData { get; set; }
+        public List<float> NormalData { get; set; }
         public List<float> ColorData { get; set; }
         public List<float> PickColorData { get; set; }
         public int ColorBufferID { get; set; }
         public int VertexBufferID { get; set; }
+        public int NormalBufferID { get; set; }
         public int PickColorBufferID { get; set; }
         public int VertexCount { get; set; }
 
         public OBJObject()
         {
             VertexData = new List<float>();
+            NormalData = new List<float>();
             ColorData = new List<float>();
             PickColorData = new List<float>();
             ColorBufferID = -1;
