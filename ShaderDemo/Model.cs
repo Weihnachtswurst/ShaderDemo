@@ -1,7 +1,8 @@
-﻿namespace ShaderDemo
+﻿using System.Collections.Generic;
+
+namespace ShaderDemo
 {
     using System.IO;
-    using ModelData;
     using System.Collections.Generic;
     using System;
     using System.Linq;
@@ -15,7 +16,7 @@
         private List<float[]> normals;
         private List<float[]> textureVertices;
         private List<OBJObject> objects;
-        
+
         public Model()
         {
             materials = new Dictionary<string, Material>();
@@ -135,9 +136,9 @@
                     objects.Last().ColorData.AddRange(curMaterial.DiffuseColor);
                     objects.Last().ColorData.AddRange(curMaterial.DiffuseColor);
 
-                    objects.Last().PickColorData.Add(curMaterial.PickIndex);
-                    objects.Last().PickColorData.Add(curMaterial.PickIndex);
-                    objects.Last().PickColorData.Add(curMaterial.PickIndex);
+                    objects.Last().PickColorData.Add(objects.Last().PickIndex);
+                    objects.Last().PickColorData.Add(objects.Last().PickIndex);
+                    objects.Last().PickColorData.Add(objects.Last().PickIndex);
                 }
                 else if (line.StartsWith("o "))
                 {
@@ -161,7 +162,7 @@
         private void readMTL(string path)
         {
             Material curMaterial = new Material("");
-            
+
             foreach (var line in File.ReadLines(path))
             {
                 if (line.StartsWith("newmtl"))
@@ -226,12 +227,6 @@
             return vector;
         }
     }
-}
-
-namespace ModelData
-{
-    using System.Collections.Generic;
-    using System.Text;
 
     public class OBJObject
     {
@@ -244,6 +239,7 @@ namespace ModelData
         public int NormalBufferID { get; set; }
         public int PickColorBufferID { get; set; }
         public int VertexCount { get; set; }
+        public int PickIndex { get; set; }
 
         public OBJObject()
         {
@@ -254,6 +250,20 @@ namespace ModelData
             ColorBufferID = -1;
             VertexBufferID = -1;
             VertexCount = 0;
+            PickIndex = Picker.register(click);
+        }
+
+        private void click()
+        {
+            List<float> list = new List<float>(ColorData.Count);
+            
+            for (int i = 0; i < list.Count; i+= 4)
+            {
+                list.AddRange(new float[] { 0, 1, 0, 1 });
+            }
+
+            GL.BindBuffer(BufferTarget.ArrayBuffer, ColorBufferID);
+            GL.BufferData(BufferTarget.ArrayBuffer, (IntPtr)(list.Count * sizeof(float)), list.ToArray(), BufferUsageHint.StaticDraw);
         }
     }
 
@@ -267,13 +277,8 @@ namespace ModelData
         public float[] SpecularColor { get; set; }
         public float[] EmissiveColor { get; set; }
 
-        public static int StaticPickIndex = 0;
-        public int PickIndex;
-
         public Material(string name)
         {
-            PickIndex = StaticPickIndex++;
-
             this.name = name;
             Alpha = 1;
             SpecularExponent = 1;
@@ -284,5 +289,4 @@ namespace ModelData
         }
     }
 }
-
 

@@ -3,7 +3,6 @@ using System.IO;
 using OpenTK.Graphics.OpenGL4;
 using OpenTK;
 using OpenTK.Input;
-using System.Runtime.InteropServices;
 
 namespace ShaderDemo
 {
@@ -61,10 +60,6 @@ namespace ShaderDemo
             defaultPickSSB.DepthValue = float.MaxValue;
             defaultPickSSB.PickIndex = -1;
 
-            // Read shaders from file
-            // string VertexSource = File.ReadAllText("Shader/vs.glsl");
-            // string FragmentSource = File.ReadAllText("Shader/fr.glsl");
-
             string VertexSource = File.ReadAllText("C:/Users/Anwender/Source/Repos/ShaderDemo/ShaderDemo/Shader/vs.glsl");
             string FragmentSource = File.ReadAllText("C:/Users/Anwender/Source/Repos/ShaderDemo/ShaderDemo/Shader/fr.glsl");
 
@@ -109,9 +104,6 @@ namespace ShaderDemo
             UniformMVPMatrixLocation = GL.GetUniformLocation(Program, "mvp_matrix");
             UniformMouseXLocation = GL.GetUniformLocation(Program, "mouse_x");
             UniformMouseYLocation = GL.GetUniformLocation(Program, "mouse_y");
-
-            IntPtr testPtr = Marshal.AllocHGlobal(Marshal.SizeOf(defaultPickSSB));
-            Marshal.StructureToPtr(defaultPickSSB, testPtr, false);
             
             GL.GenBuffers(1, out SSB);
             GL.BindBuffer(BufferTarget.ShaderStorageBuffer, SSB);
@@ -174,9 +166,12 @@ namespace ShaderDemo
             GL.BindBuffer(BufferTarget.ShaderStorageBuffer, SSB);
             GL.BindBufferBase(BufferRangeTarget.ShaderStorageBuffer, 0, SSB);
             GL.GetBufferSubData(BufferTarget.ShaderStorageBuffer, (IntPtr)0, (IntPtr)(8), ref output);
-            
+
             if (output.PickIndex != -1)
-            Console.Out.WriteLine(output.PickIndex);
+            {
+                Console.Out.WriteLine(output.PickIndex);
+                Picker.invoke(output.PickIndex);
+            }
 
             GL.BufferData(BufferTarget.ShaderStorageBuffer, (IntPtr)(2 * sizeof(float)), ref defaultPickSSB, BufferUsageHint.DynamicCopy);
 
