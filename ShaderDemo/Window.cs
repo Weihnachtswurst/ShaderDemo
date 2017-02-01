@@ -3,6 +3,8 @@ using System.IO;
 using OpenTK.Graphics.OpenGL4;
 using OpenTK;
 using OpenTK.Input;
+using System.Drawing;
+using System.Drawing.Imaging;
 
 namespace ShaderDemo
 {
@@ -18,12 +20,16 @@ namespace ShaderDemo
         int PickColorLocation;
         int PositionLocation;
         int NormalLocation;
+        int TexCoordLocation;
         int ColorLocation;
         int UniformMouseXLocation;
         int UniformMouseYLocation;
         int UniformMVPMatrixLocation;
         int Program;
         int SSB;
+
+        int SamplerLocation;
+        int TextureID;
         
         public Window(int width, int height) : base(width, height) {}
 
@@ -44,6 +50,8 @@ namespace ShaderDemo
                         
             m.loadFromOBJ("C:/Users/Anwender/Downloads/lpm_yard.obj");
             m.init();
+
+            TextureID = loadImage("C:/Users/Anwender/Desktop/test.png");
 
             // Setup openGL
             GL.ClearColor(0.0f, 0.0f, 0.0f, 1.0f);
@@ -100,11 +108,14 @@ namespace ShaderDemo
             PickColorLocation = GL.GetAttribLocation(Program, "vertex_pick_index");
             PositionLocation = GL.GetAttribLocation(Program, "vertex_position");
             NormalLocation = GL.GetAttribLocation(Program, "vertex_normal");
+            TexCoordLocation = GL.GetAttribLocation(Program, "vertex_tex_coord");
             ColorLocation = GL.GetAttribLocation(Program, "vertex_color");
             UniformMVPMatrixLocation = GL.GetUniformLocation(Program, "mvp_matrix");
             UniformMouseXLocation = GL.GetUniformLocation(Program, "mouse_x");
             UniformMouseYLocation = GL.GetUniformLocation(Program, "mouse_y");
-            
+            SamplerLocation = GL.GetUniformLocation(Program, "main_texture");
+
+
             GL.GenBuffers(1, out SSB);
             GL.BindBuffer(BufferTarget.ShaderStorageBuffer, SSB);
             GL.BufferData(BufferTarget.ShaderStorageBuffer, (IntPtr)(4 * sizeof(float)), ref defaultPickSSB, BufferUsageHint.DynamicCopy);
@@ -188,14 +199,50 @@ namespace ShaderDemo
 
             GL.UseProgram(Program);
 
-            m.draw(PositionLocation, NormalLocation, ColorLocation, PickColorLocation);
+            GL.ActiveTexture(TextureUnit.Texture0);
+            GL.BindTexture(TextureTarget.Texture2D, TextureID);
+            GL.Uniform1(SamplerLocation, 0);
+
+            m.draw(PositionLocation, NormalLocation, ColorLocation, TexCoordLocation, PickColorLocation);
 
             GL.UseProgram(0);
 
             SwapBuffers();
         }
+
+        int loadImage(Bitmap image)
+        {
+            int texID = GL.GenTexture();
+
+            GL.BindTexture(TextureTarget.Texture2D, texID);
+            BitmapData data = image.LockBits(new System.Drawing.Rectangle(0, 0, image.Width, image.Height),
+                ImageLockMode.ReadOnly, System.Drawing.Imaging.PixelFormat.Format32bppArgb);
+
+            GL.TexImage2D(TextureTarget.Texture2D, 0, PixelInternalFormat.Rgba, data.Width, data.Height, 0,
+                OpenTK.Graphics.OpenGL4.PixelFormat.Bgra, PixelType.UnsignedByte, data.Scan0);
+
+            image.UnlockBits(data);
+
+            GL.GenerateMipmap(GenerateMipmapTarget.Texture2D);
+
+            return texID;
+        }
+
+        int loadImage(string filename)
+        {
+            try
+            {
+                Bitmap file = new Bitmap(filename);
+                return loadImage(file);
+            }
+            catch (FileNotFoundException e)
+            {
+                return -1;
+            }
+        }
     }
 }
+
 
 public struct PickSSB
 {

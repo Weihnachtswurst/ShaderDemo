@@ -43,6 +43,10 @@ namespace ShaderDemo
                 GL.BindBuffer(BufferTarget.ArrayBuffer, o.ColorBufferID);
                 GL.BufferData(BufferTarget.ArrayBuffer, (IntPtr)(o.ColorData.Count * sizeof(float)), o.ColorData.ToArray(), BufferUsageHint.StaticDraw);
 
+                o.TexCoordBufferID = GL.GenBuffer();
+                GL.BindBuffer(BufferTarget.ArrayBuffer, o.TexCoordBufferID);
+                GL.BufferData(BufferTarget.ArrayBuffer, (IntPtr)(o.TexCoordData.Count * sizeof(float)), o.TexCoordData.ToArray(), BufferUsageHint.StaticDraw);
+
                 o.PickColorBufferID = GL.GenBuffer();
                 GL.BindBuffer(BufferTarget.ArrayBuffer, o.PickColorBufferID);
                 GL.BufferData(BufferTarget.ArrayBuffer, (IntPtr)(o.PickColorData.Count * sizeof(int)), o.PickColorData.ToArray(), BufferUsageHint.StaticDraw);
@@ -51,7 +55,7 @@ namespace ShaderDemo
             }
         }
 
-        public void draw(int positionLocation, int normalLocation, int colorLocation, int pickColorLocation)
+        public void draw(int positionLocation, int normalLocation, int colorLocation, int texCoordLocation, int pickColorLocation)
         {
             if (positionLocation == -1)
                 Console.Out.WriteLine("Invalid Position Location");
@@ -61,6 +65,9 @@ namespace ShaderDemo
 
             if (colorLocation == -1)
                 Console.Out.WriteLine("Invalid Color Location");
+
+            if (texCoordLocation == -1)
+                Console.Out.WriteLine("Invalid Tex Coord Location");
 
             if (pickColorLocation == -1)
                 Console.Out.WriteLine("Invalid Pick Color Location");
@@ -78,6 +85,10 @@ namespace ShaderDemo
                 GL.EnableVertexAttribArray(colorLocation);
                 GL.BindBuffer(BufferTarget.ArrayBuffer, o.ColorBufferID);
                 GL.VertexAttribPointer(colorLocation, 4, VertexAttribPointerType.Float, false, 0, 0);
+
+                GL.EnableVertexAttribArray(texCoordLocation);
+                GL.BindBuffer(BufferTarget.ArrayBuffer, o.TexCoordBufferID);
+                GL.VertexAttribPointer(texCoordLocation, 2, VertexAttribPointerType.Float, false, 0, 0);
 
                 GL.EnableVertexAttribArray(pickColorLocation);
                 GL.BindBuffer(BufferTarget.ArrayBuffer, o.PickColorBufferID);
@@ -131,6 +142,10 @@ namespace ShaderDemo
                     objects.Last().NormalData.AddRange(normals[n1]);
                     objects.Last().NormalData.AddRange(normals[n2]);
                     objects.Last().NormalData.AddRange(normals[n3]);
+
+                    objects.Last().TexCoordData.AddRange(new float[] { 0, 0 });
+                    objects.Last().TexCoordData.AddRange(new float[] { 0, 1 });
+                    objects.Last().TexCoordData.AddRange(new float[] { 1, 1 });
 
                     objects.Last().ColorData.AddRange(curMaterial.DiffuseColor);
                     objects.Last().ColorData.AddRange(curMaterial.DiffuseColor);
@@ -233,10 +248,12 @@ namespace ShaderDemo
         public List<float> VertexData { get; set; }
         public List<float> NormalData { get; set; }
         public List<float> ColorData { get; set; }
+        public List<float> TexCoordData { get; set; }
         public List<int> PickColorData { get; set; }
         public int ColorBufferID { get; set; }
         public int VertexBufferID { get; set; }
         public int NormalBufferID { get; set; }
+        public int TexCoordBufferID { get; set; }
         public int PickColorBufferID { get; set; }
         public int VertexCount { get; set; }
         public int PickIndex { get; set; }
@@ -246,6 +263,7 @@ namespace ShaderDemo
             VertexData = new List<float>();
             NormalData = new List<float>();
             ColorData = new List<float>();
+            TexCoordData = new List<float>();
             PickColorData = new List<int>();
             ColorBufferID = -1;
             VertexBufferID = -1;
