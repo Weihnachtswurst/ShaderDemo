@@ -22,13 +22,11 @@ void main(void)
 		}
 	}
 
-	pick_index = textureSize(main_texture, 0).y;
-
 	if (int(gl_FragCoord.x) == mouse_x || int(gl_FragCoord.y) == mouse_y) {
 		color = vec4(0.0f, 1,0,1.0f);
 	} else {
 		color = frag_color;
 	}
 
-	color = texture(main_texture, frag_tex_coord);
+	// color = texture(main_texture, frag_tex_coord);
 }

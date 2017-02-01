@@ -15,19 +15,9 @@ namespace ShaderDemo
         Matrix4 WorldMatrix;
         Matrix4 ModelviewMatrix;
         Vector3 CameraPosition;
-        float[] SSBDefaultData = { 0.0f, 0.0f, 0.0f, float.MaxValue };
-        PickSSB defaultPickSSB;
-        int PickColorLocation;
-        int PositionLocation;
-        int NormalLocation;
-        int TexCoordLocation;
-        int ColorLocation;
-        int UniformMouseXLocation;
-        int UniformMouseYLocation;
-        int UniformMVPMatrixLocation;
-        int Program;
+        // PickSSB defaultPickSSB;
+        Shader shader;
         int SSB;
-
         int SamplerLocation;
         int TextureID;
         
@@ -42,9 +32,6 @@ namespace ShaderDemo
         protected override void OnLoad(EventArgs e)
         {
             base.OnLoad(e);
-
-            int status_code;
-            string info;
 
             Console.Out.WriteLine(GL.GetString(StringName.Version));
                         
@@ -64,67 +51,28 @@ namespace ShaderDemo
             ModelviewMatrix = new Matrix4();
             CameraPosition = new Vector3(0.5f, 0.5f, 0);
 
-            defaultPickSSB = new PickSSB();
-            defaultPickSSB.DepthValue = float.MaxValue;
-            defaultPickSSB.PickIndex = -1;
+            //defaultPickSSB = new PickSSB();
+            //defaultPickSSB.DepthValue = float.MaxValue;
+            //defaultPickSSB.PickIndex = -1;
 
-            string VertexSource = File.ReadAllText("C:/Users/Anwender/Source/Repos/ShaderDemo/ShaderDemo/Shader/vs.glsl");
-            string FragmentSource = File.ReadAllText("C:/Users/Anwender/Source/Repos/ShaderDemo/ShaderDemo/Shader/fr.glsl");
+            shader = new Shader();
 
-            // Create Shaders
-            int VertexID = GL.CreateShader(ShaderType.VertexShader);
-            int FragmentID = GL.CreateShader(ShaderType.FragmentShader);
+            shader.AttachSource(File.ReadAllText("C:/Users/Anwender/Source/Repos/ShaderDemo/ShaderDemo/Shader/vs.glsl"), ShaderType.VertexShader);
+            shader.AttachSource(File.ReadAllText("C:/Users/Anwender/Source/Repos/ShaderDemo/ShaderDemo/Shader/fr.glsl"), ShaderType.FragmentShader);
 
-            // Compile vertex shader
-            GL.ShaderSource(VertexID, VertexSource);
-            GL.CompileShader(VertexID);
-            GL.GetShaderInfoLog(VertexID, out info);
-            GL.GetShader(VertexID, ShaderParameter.CompileStatus, out status_code);
+            shader.Compile();
 
-            if (status_code != 1)
-                throw new ApplicationException(info);
+            shader.Use();
 
-            // Compile fragment shader
-            GL.ShaderSource(FragmentID, FragmentSource);
-            GL.CompileShader(FragmentID);
-            GL.GetShaderInfoLog(FragmentID, out info);
-            GL.GetShader(FragmentID, ShaderParameter.CompileStatus, out status_code);
-
-            if (status_code != 1)
-                throw new ApplicationException(info);
-
-            // Create and Link Program
-            Program = GL.CreateProgram();
-            GL.AttachShader(Program, FragmentID);
-            GL.AttachShader(Program, VertexID);
-
-            GL.BindFragDataLocation(Program, 0, "color");
-
-            GL.LinkProgram(Program);
-
-            GL.UseProgram(Program);
-
-            // Get Buffer Locations
-            PickColorLocation = GL.GetAttribLocation(Program, "vertex_pick_index");
-            PositionLocation = GL.GetAttribLocation(Program, "vertex_position");
-            NormalLocation = GL.GetAttribLocation(Program, "vertex_normal");
-            TexCoordLocation = GL.GetAttribLocation(Program, "vertex_tex_coord");
-            ColorLocation = GL.GetAttribLocation(Program, "vertex_color");
-            UniformMVPMatrixLocation = GL.GetUniformLocation(Program, "mvp_matrix");
-            UniformMouseXLocation = GL.GetUniformLocation(Program, "mouse_x");
-            UniformMouseYLocation = GL.GetUniformLocation(Program, "mouse_y");
-            SamplerLocation = GL.GetUniformLocation(Program, "main_texture");
-
+            shader.LookUpAttributeLocation("vertex_pick_index", "vertex_position", "vertex_normal", "vertex_tex_coord", "vertex_color");
+            shader.LookUpUniformLocation("mvp_matrix", "mouse_x", "mouse_y", "main_texture");
 
             GL.GenBuffers(1, out SSB);
             GL.BindBuffer(BufferTarget.ShaderStorageBuffer, SSB);
-            GL.BufferData(BufferTarget.ShaderStorageBuffer, (IntPtr)(4 * sizeof(float)), ref defaultPickSSB, BufferUsageHint.DynamicCopy);
+            GL.BufferData(BufferTarget.ShaderStorageBuffer, (IntPtr)(4 * sizeof(float)), ref PickSSB.Default, BufferUsageHint.DynamicCopy);
             GL.BindBufferBase(BufferRangeTarget.ShaderStorageBuffer, 0, SSB);
 
             GL.UseProgram(0);
-
-            // Load Models
-            //model.loadFromOBJ("Models/lpm_yard.obj", "Models/lpm_yard.mtl");
         }
 
         protected override void OnUpdateFrame(FrameEventArgs e)
@@ -164,16 +112,15 @@ namespace ShaderDemo
             ModelviewMatrix = Matrix4.CreateTranslation(0.0f, 0.0f, -2.0f);
             Matrix4 MVPMatrix = ModelviewMatrix * WorldMatrix * ProjectionMatrix;
             Vector3 lookAtVector = new Vector3(0, 1, 0);
+
+            shader.Use();
+
+            GL.UniformMatrix4(shader.GetUniformLocation("mvp_matrix"), false, ref MVPMatrix);
+            GL.Uniform1(shader.GetUniformLocation("mouse_x"), Mouse.X);
+            GL.Uniform1(shader.GetUniformLocation("mouse_y"), Height - Mouse.Y);
             
-            GL.UseProgram(Program);
- 
-            GL.UniformMatrix4(UniformMVPMatrixLocation, false, ref MVPMatrix);
-            GL.Uniform1(UniformMouseXLocation, Mouse.X);
-            GL.Uniform1(UniformMouseYLocation, Height - Mouse.Y);
-            
-            //float[] output = new float[4];
+
             PickSSB output = new PickSSB();
-            // int output = -1;
             GL.BindBuffer(BufferTarget.ShaderStorageBuffer, SSB);
             GL.BindBufferBase(BufferRangeTarget.ShaderStorageBuffer, 0, SSB);
             GL.GetBufferSubData(BufferTarget.ShaderStorageBuffer, (IntPtr)0, (IntPtr)(8), ref output);
@@ -184,7 +131,7 @@ namespace ShaderDemo
                 Picker.invoke(output.PickIndex);
             }
 
-            GL.BufferData(BufferTarget.ShaderStorageBuffer, (IntPtr)(2 * sizeof(float)), ref defaultPickSSB, BufferUsageHint.DynamicCopy);
+            GL.BufferData(BufferTarget.ShaderStorageBuffer, (IntPtr)(2 * sizeof(float)), ref PickSSB.Default, BufferUsageHint.DynamicCopy);
 
             GL.UseProgram(0);
         }
@@ -197,13 +144,14 @@ namespace ShaderDemo
             GL.ClearColor(0.0f, 0.8f, 0.8f, 1.0f);
             GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
 
-            GL.UseProgram(Program);
+            shader.Use(); ;
 
             GL.ActiveTexture(TextureUnit.Texture0);
             GL.BindTexture(TextureTarget.Texture2D, TextureID);
             GL.Uniform1(SamplerLocation, 0);
 
-            m.draw(PositionLocation, NormalLocation, ColorLocation, TexCoordLocation, PickColorLocation);
+            m.draw(shader.GetAttributeLocation("vertex_position"), shader.GetAttributeLocation("vertex_normal"), shader.GetAttributeLocation("vertex_color"),
+                shader.GetAttributeLocation("vertex_tex_coord"), shader.GetAttributeLocation("vertex_pick_index"));
 
             GL.UseProgram(0);
 
@@ -243,9 +191,15 @@ namespace ShaderDemo
     }
 }
 
-
 public struct PickSSB
 {
     public int PickIndex;
     public float DepthValue;
+    public static PickSSB Default = new PickSSB(1, 2);
+
+    public PickSSB(int PickIndex, float DepthValue)
+    {
+        this.PickIndex = PickIndex;
+        this.DepthValue = DepthValue;
+    }
 }
