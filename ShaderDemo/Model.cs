@@ -15,7 +15,7 @@ namespace ShaderDemo
         private List<float[]> vertices;
         private List<float[]> normals;
         private List<float[]> textureVertices;
-        private List<OBJObject> objects;
+        private List<Mesh> objects;
 
         public Model()
         {
@@ -23,7 +23,7 @@ namespace ShaderDemo
             vertices = new List<float[]>();
             normals = new List<float[]>();
             textureVertices = new List<float[]>();
-            objects = new List<OBJObject>();
+            objects = new List<Mesh>();
             // objects.Add(new OBJObject()); // Add Default Object
         }
 
@@ -157,7 +157,7 @@ namespace ShaderDemo
                 }
                 else if (line.StartsWith("o "))
                 {
-                    objects.Add(new OBJObject());
+                    objects.Add(new Mesh());
                 }
                 else if (line.StartsWith("g "))
                 {
@@ -240,70 +240,6 @@ namespace ShaderDemo
                 vector[3] = 1.0f;
 
             return vector;
-        }
-    }
-
-    public class OBJObject
-    {
-        public List<float> VertexData { get; set; }
-        public List<float> NormalData { get; set; }
-        public List<float> ColorData { get; set; }
-        public List<float> TexCoordData { get; set; }
-        public List<int> PickColorData { get; set; }
-        public int ColorBufferID { get; set; }
-        public int VertexBufferID { get; set; }
-        public int NormalBufferID { get; set; }
-        public int TexCoordBufferID { get; set; }
-        public int PickColorBufferID { get; set; }
-        public int VertexCount { get; set; }
-        public int PickIndex { get; set; }
-
-        public OBJObject()
-        {
-            VertexData = new List<float>();
-            NormalData = new List<float>();
-            ColorData = new List<float>();
-            TexCoordData = new List<float>();
-            PickColorData = new List<int>();
-            ColorBufferID = -1;
-            VertexBufferID = -1;
-            VertexCount = 0;
-            PickIndex = Picker.register(click);
-        }
-
-        private void click()
-        {
-            List<float> list = new List<float>(ColorData.Count);
-            
-            for (int i = 0; i < list.Count; i+= 4)
-            {
-                list.AddRange(new float[] { 0, 1, 0, 1 });
-            }
-
-            GL.BindBuffer(BufferTarget.ArrayBuffer, ColorBufferID);
-            GL.BufferData(BufferTarget.ArrayBuffer, (IntPtr)(list.Count * sizeof(float)), list.ToArray(), BufferUsageHint.StaticDraw);
-        }
-    }
-
-    public class Material
-    {
-        private string name;
-        public float Alpha { get; set; }
-        public float SpecularExponent { get; set; }
-        public float[] DiffuseColor { get; set; }
-        public float[] AmbientColor { get; set; }
-        public float[] SpecularColor { get; set; }
-        public float[] EmissiveColor { get; set; }
-
-        public Material(string name)
-        {
-            this.name = name;
-            Alpha = 1;
-            SpecularExponent = 1;
-            DiffuseColor = new float[4];
-            AmbientColor = new float[4];
-            SpecularColor = new float[4];
-            EmissiveColor = new float[4];
         }
     }
 }
